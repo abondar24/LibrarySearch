@@ -17,3 +17,11 @@ attachment as a ZIP archive. The structure of the files should be self-explanato
 - Find and return a book / magazine using an ISBN number
 - Find and return all the books / magazines of an author
 - Sort and return all books / magazines by title
+
+## Build and run
+```yaml 
+mvn clean install
+
+java -jar target/LibrarySearch-1.0-SNAPSHOT.jar
+
+```
