@@ -1,0 +1,257 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="org.abondar.industrial.libsearch.db.DataMapper">
+
+    <sql id="authorTable">
+        author aut
+    </sql>
+
+    <sql id="publicationTable">
+        publication publ
+    </sql>
+
+    <sql id="bookTable">
+        book bk
+    </sql>
+
+    <sql id="magazineTable">
+        magazine mag
+    </sql>
+
+    <sql id="publicationAuthorTable">
+        publication_author pa
+    </sql>
+
+
+    <resultMap id="authorMap" type="Author">
+        <id column="email" property="email"/>
+        <result column="first_name" property="firstName"/>
+        <result column="last_name" property="lastName"/>
+    </resultMap>
+
+    <resultMap id="publicationMap" type="Publication">
+        <id column="isbn" property="isbn"/>
+        <result column="title" property="title"/>
+        <discriminator javaType="int" column="publ_type">
+            <case value="1" resultType="Book">
+                <result column="description" property="description"/>
+            </case>
+            <case value="2" resultType="Magazine">
+                <result column="pub_date" property="pubDate"/>
+            </case>
+        </discriminator>
+    </resultMap>
+
+    <resultMap id="publicationAuthorMap" type="PublicationAuthor">
+        <id column="id" property="id"/>
+        <result column="publ_isbn" property="publIsbn"/>
+        <result column="auth_email" property="authEmail"/>
+    </resultMap>
+
+    <insert id="insertUpdateAuthors" useGeneratedKeys="false" keyColumn="email" keyProperty="author.email">
+        INSERT INTO author
+        (
+        email,
+        first_name,
+        last_name,
+        )
+
+        VALUES
+        <foreach collection="authorList" item="param1" separator=",">
+            (
+            #{param1.email},
+            #{param1.firstName},
+            #{param1.lastName}
+            )
+        </foreach>
+        ON DUPLICATE KEY UPDATE
+        first_name=VALUES(first_name),
+        last_name=VALUES(last_name)
+    </insert>
+
+    <insert id="insertUpdatePublications" useGeneratedKeys="false" keyColumn="isbn" keyProperty="publication.isbn">
+        INSERT INTO publication
+        (
+        isbn,
+        title,
+        publ_type,
+        )
+
+        VALUES
+        <foreach collection="pubList" item="param1" separator=",">
+            (
+            #{param1.publ.isbn},
+            #{param1.publ.title},
+            #{param1.publ_type}
+            )
+        </foreach>
+        ON DUPLICATE KEY UPDATE
+        title=VALUES(title),
+        publ_type=VALUES(publ_type)
+    </insert>
+
+    <insert id="insertUpdateBooks" useGeneratedKeys="false" keyColumn="isbn" keyProperty="book.book_isbn">
+        INSERT INTO book
+        (
+        book_isbn,
+        description
+        )
+
+        VALUES
+        <foreach collection="bookList" item="param1" separator=",">
+            (
+            #{param1.isbn},
+            #{param1.description}
+            )
+        </foreach>
+        ON DUPLICATE KEY UPDATE
+        description=VALUES(description)
+    </insert>
+
+    <insert id="insertUpdateMagazines" useGeneratedKeys="false" keyColumn="isbn" keyProperty="magazine.isbn">
+        INSERT INTO magazine
+        (
+        mag_isbn,
+        pub_date
+        )
+
+        VALUES
+        <foreach collection="magList" item="param1" separator=",">
+            (
+            #{param1.isbn},
+            #{param1.pubDate}
+            )
+        </foreach>
+        ON DUPLICATE KEY UPDATE
+        pub_date=VALUES(pub_date)
+    </insert>
+
+
+    <insert id="insertUpdatePublicationAuthors" useGeneratedKeys="true" keyColumn="id" keyProperty="id">
+        INSERT INTO publication_author
+        (
+        auth_email,
+        publ_isbn
+        )
+        VALUES
+        <foreach collection="paList" item="param1" separator=",">
+            (
+            #{param1.authEmail},
+            #{param1.publIsbn}
+            )
+        </foreach>
+        ON DUPLICATE KEY UPDATE
+        auth_email=VALUES(auth_email),
+        publ_isbn=VALUES(publ_isbn)
+    </insert>
+
+    <select id="getAuthorByEmail" resultMap="authorMap">
+        SELECT *
+        FROM
+        <include refid="authorTable"/>
+        WHERE aut.email=#{email}
+    </select>
+
+    <select id="getPublicationRows" resultType="map">
+        SELECT *
+        FROM
+        <include refid="publicationTable"/>
+    </select>
+
+    <select id="getBookRows" resultType="map">
+        SELECT *
+        FROM
+        <include refid="bookTable"/>
+    </select>
+
+    <select id="getMagazineRows" resultType="map">
+        SELECT *
+        FROM
+        <include refid="magazineTable"/>
+    </select>
+
+    <select id="getAllPublications" resultMap="publicationMap">
+        SELECT isbn,title,description,pub_date,publ_type
+        FROM
+        <include refid="publicationTable"/>
+        LEFT JOIN
+        <include refid="bookTable"/>
+        ON bk.book_isbn=publ.isbn
+        LEFT JOIN
+        <include refid="magazineTable"/>
+        ON mag.mag_isbn=publ.isbn
+    </select>
+
+
+    <select id="getSortedPublications" resultMap="publicationMap">
+        SELECT isbn,title,description,pub_date,publ_type
+        FROM
+        <include refid="publicationTable"/>
+        LEFT JOIN
+        <include refid="bookTable"/>
+        ON bk.book_isbn=publ.isbn
+        LEFT JOIN
+        <include refid="magazineTable"/>
+        ON mag.mag_isbn=publ.isbn
+        ORDER BY title
+    </select>
+
+    <select id="getPublicationByIsbn" resultMap="publicationMap">
+        SELECT isbn,title,description,pub_date,publ_type
+        FROM
+        <include refid="publicationTable"/>
+        LEFT JOIN
+        <include refid="bookTable"/>
+        ON bk.book_isbn=publ.isbn
+        LEFT JOIN
+        <include refid="magazineTable"/>
+        ON mag.mag_isbn=publ.isbn
+        WHERE publ.isbn=#{isbn}
+    </select>
+
+    <select id="getPublicationsByAuthor" resultMap="publicationMap">
+        SELECT publ.isbn,title,description,pub_date,publ_type
+        FROM
+        <include refid="publicationTable"/>
+        LEFT JOIN
+        <include refid="bookTable"/>
+        ON bk.book_isbn=publ.isbn
+        LEFT JOIN
+        <include refid="magazineTable"/>
+        ON mag.mag_isbn=publ.isbn
+        JOIN
+        <include refid="publicationAuthorTable"/>
+        ON pa.publ_isbn=publ.isbn
+        JOIN
+        <include refid="authorTable"/>
+        ON pa.auth_email=aut.email
+        WHERE aut.email=#{email}
+    </select>
+
+    <delete id="deleteAuthors">
+        DELETE FROM
+        <include refid="publicationAuthorTable"/>
+    </delete>
+
+    <delete id="deletePublications">
+        DELETE FROM
+        <include refid="publicationTable"/>
+    </delete>
+
+    <delete id="deleteBooks">
+        DELETE FROM
+        <include refid="bookTable"/>
+    </delete>
+
+    <delete id="deleteMagazines">
+        DELETE FROM
+        <include refid="magazineTable"/>
+    </delete>
+
+    <delete id="deletePublicationAuthors">
+        DELETE FROM
+        <include refid="publicationAuthorTable"/>
+    </delete>
+</mapper>

@@ -1,0 +1,42 @@
+CREATE TABLE IF NOT EXISTS author(
+  email VARCHAR(255) NOT NULL PRIMARY KEY,
+  first_name VARCHAR(255) NOT NULL,
+  last_name VARCHAR (255) NOT NULL
+);
+
+CREATE TABLE IF NOT EXISTS publication(
+ isbn VARCHAR(255) NOT NULL PRIMARY KEY,
+ title VARCHAR(255) NOT NULL,
+ publ_type INTEGER
+);
+
+CREATE TABLE IF NOT EXISTS book(
+  book_isbn VARCHAR(255) PRIMARY KEY NOT NULL,
+  description VARCHAR(2048) NOT NULL
+);
+
+ALTER TABLE book ADD CONSTRAINT IF NOT EXISTS  fk_publ_book
+FOREIGN KEY(book_isbn) REFERENCES publication(isbn);
+
+CREATE TABLE IF NOT EXISTS magazine(
+  mag_isbn VARCHAR(255) PRIMARY KEY NOT NULL,
+  pub_date DATE NOT NULL
+);
+
+ALTER TABLE magazine ADD CONSTRAINT IF NOT EXISTS fk_publ_mag
+FOREIGN KEY(mag_isbn) REFERENCES publication(isbn);
+
+
+CREATE TABLE IF NOT EXISTS publication_author(
+  id VARCHAR(255) NOT NULL PRIMARY KEY AUTO_INCREMENT,
+  auth_email VARCHAR(255) NOT NULL,
+  publ_isbn VARCHAR (255) NOT NULL
+);
+
+ALTER TABLE publication_author ADD CONSTRAINT IF NOT EXISTS  fk_pa_publ
+FOREIGN KEY(publ_isbn) REFERENCES publication(isbn);
+
+ALTER TABLE publication_author ADD CONSTRAINT IF NOT EXISTS  fk_pa_author
+FOREIGN KEY(auth_email) REFERENCES author(email);
+
+
